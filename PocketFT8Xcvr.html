@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 24.8.3.2 (MacOSX)"/>
+	<meta name="created" content="2024-12-04T19:45:41.269155552"/>
+	<meta name="changed" content="2024-12-04T20:49:45.209543615"/>
+	<style type="text/css">
+		@page { margin: 0.79in }
+		p { margin-bottom: 0.1in }
+		h1.western { font-family: "Liberation Sans", sans-serif; font-size: 18pt }
+		h1.cjk { font-family: "Arial Unicode MS"; font-size: 18pt }
+		h1.ctl { font-size: 18pt }
+		h2.western { font-family: "Liberation Sans", sans-serif; font-size: 16pt }
+		h2.cjk { font-family: "Arial Unicode MS"; font-size: 16pt }
+		h2.ctl { font-size: 16pt }
+	</style>
+</head>
+<body lang="en-US" dir="ltr"><h1 class="western">PocketFT8Xcvr: 
+Pocket FT8 Revisited</h1>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<h2 class="western">Synopsis</h2>
+<p style="line-height: 100%; margin-bottom: 0in">A somewhat faithful
+SMD implementation of Charles Hill's self-contained Pocket FT8
+amateur radio transceiver updated for Teensy 4.1 on a 4-Layer board.</p>
+<h2 class="western">Attribution</h2>
+<p>Pocket FT8 transceivers result from many contributors including,</p>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0in">Copyright (C)
+	2021, Charles Hill (W5BAA)</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0in">Si4735 Library
+	developed by Ricardo Caritti: https://github.com/pu2clr/SI4735</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0in">FT8 Decoding
+	Library by Karlis Goba (YL3JG): https://github.com/kgoba/ft8_lib</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0in">SN74ACT244 PA
+	by Barb (WB2CBA)</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0in">PC Board and
+	enhancements by Jim Conrad (KQ7B)</p></li>
+</ul>
+<h2 class="western">MIT License</h2>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0in">Copyright (c)
+	2018 Kārlis Goba</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0in">Copyright (C)
+	2021, Charles Hill (W5BAA)</p></li>
+	<li><p style="line-height: 100%; margin-bottom: 0in">Copyright (C)
+	2024, Jim Conrad (KQ7B)</p></li>
+</ul>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">Permission is hereby
+granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the &quot;Software&quot;),
+to deal in the Software without restriction, including without
+limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The above copyright
+notice and this permission notice shall be included in all copies or
+substantial portions of the Software.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">THE SOFTWARE IS
+PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE</p>
+<p style="line-height: 100%; margin-bottom: 0in">AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+<h2 class="western">Features</h2>
+<p style="line-height: 100%; margin-bottom: 0in">* Single band,
+amateur radio FT8 Tranceiver</p>
+<p style="line-height: 100%; margin-bottom: 0in">* Small Size, 4.0 X
+2.8&quot; on a 4-Layer board</p>
+<p style="line-height: 100%; margin-bottom: 0in">* Powered by a
+single 5V USB source (e.g. portable USB power block) delivering ~375
+mA</p>
+<p style="line-height: 100%; margin-bottom: 0in">* TCXO</p>
+<p style="line-height: 100%; margin-bottom: 0in">* Si4735 SSB
+Receiver &amp; Si5351 Transmit FSK Clock</p>
+<p style="line-height: 100%; margin-bottom: 0in">* SN74ACT244 line
+driver PA</p>
+<p style="line-height: 100%; margin-bottom: 0in">* SD Card Contact
+Logging</p>
+<p style="line-height: 100%; margin-bottom: 0in">* Adafruit 320 X 480
+Resistive Color Touch Screen</p>
+<p style="line-height: 100%; margin-bottom: 0in">* Station
+configuration via SD card file, config.json</p>
+<h2 class="western">DSP Audio Architecture</h2>
+<p style="line-height: 100%; margin-bottom: 0in">Decoding FT8
+requires significant data storage and processing speed.  In order to
+optimize both program storage and processing speed requirements so
+that the Teensy is not over taxed, the Teensy Audio Library has been
+modified to allow Analog to Digital conversion to be run at the rate
+of 6400 samples per second. This allows audio data processing to be
+done at 3200 Hz. The 3200 Hz audio processing with a 2048 FTT to
+process the received audio for FT8 decoding yields a bin spacing of
+3.125 Hz.  For Teensy 4.1, the revised sample rate required
+replacement of the core AudioStream.h file with the AudioStream6400.h
+file in the PocketFT8FW sketch folder.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The algorithms
+developed by Karlis Goba use the 3.125 Hz spaced FFT bins to be
+screened in both frequency and time so that errors in symbol
+frequency and time reception  can be overcome to provide really great
+FT8 decoding. The end spacing of the FT8 algorithms is 6.25 Hz.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in"># Motivation and
+Related Projects</p>
+<p style="line-height: 100%; margin-bottom: 0in">About 1966, the ARRL
+Handbook published a receiver design known as the Junior Miser's
+Dream that achieved so much with so little.  Likewise, Charley Hill's
+design for a self-contained FT8 transceiver, ideal for POTA/SOTA,
+again achieves so much with so little.  The entire transceiver fits
+in a portable enclosure, and the power demand is acceptable for a USB
+power block.  Pocket FT8 Revisited V1.10 is a mostly faithful
+re-implementation of Charley's concept with revisions largely limited
+to those necessary for the Teensy 4.1.  From there, the project has
+and continues to implement enhancements to get just a little more
+from so little.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">Unlike the uSDX
+multi-mode designs, Pocket FT8 focuses entirely on FT8.  Yes, yes, I
+know.  That's why I have other radios.  Pocket FT8 fits in the pocket
+of my backpack, doesn't require an external key, microphone,
+headphone, cell phone, or computer, and offers a completely
+self-contained transceiver for a contest-like POTA/SOTA &quot;QSO.&quot;
+ It's clean.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">An alternative
+approach, previously investigated as YASDR, is to construct an FT8
+radio hat for a Raspberry 5 supporting the comprehensive wsjtx/etc
+natively.  This archived project offers considerable flexibility but
+with higher power requirements (I'm getting too old to pack heavy
+batteries in the mountains;).  This approach is worth revisiting in
+the future if we can get the power demand down.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">Charley and Barb
+have also progressed beyond the original Pocket FT8 with a multiband
+FT8 transceiver, DX FT8, at
+<a href="https://github.com/WB2CBA/DX-FT8-FT8-MULTIBAND-TABLET-TRANSCEIVER">https://github.com/WB2CBA/DX-FT8-FT8-MULTIBAND-TABLET-TRANSCEIVER</a>,
+replacing the SI4735 with a Tayloe receiver.</p>
+<h2 class="western">Versions and Status</h2>
+<p style="line-height: 100%; margin-bottom: 0in">V1.00 PCB gerbers
+and pos files submitted to PCBWay.</p>
+<p style="line-height: 100%; margin-bottom: 0in">V1.10 Transmitter
+works.  Receiver occasionally decodes FT8 messages.  See Issue #23 on
+github.</p>
+<p style="line-height: 100%; margin-bottom: 0in">V2.00 A new PCB
+moves the SI5351 and MCP342x to away from Wire to Wire2 to minimize
+I2C noise (Issue #23) hampering the SI4735.  Status:  As of Dec 4,
+2024, this board is undergoing testing at KQ7B.</p>
+<h2 class="western">Design Notes</h2>
+<p style="line-height: 100%; margin-bottom: 0in">Versions of Pocket
+FT8 Revisited are tested on 40M and 20M at KQ7B.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The receiver is
+based upon the SI4735 chip offering a compact, low-power approach for
+most HF bands  Following-up on a tip from the SI4735's application
+notes, the chip was found to be sensitive to noise from other I2C
+traffic on the same bus as the SI4735.  Disabling the touchscreen I2C
+in firmware resolved the issue, greatly improving reception at the
+loss of the GUI.  The V2.00 boards address this issue by moving the
+touchscreen (MCP342X) and SI5351 traffic from the Wire to the Wire2
+I2C bus, isolating the SI4735 on Wire.  Likewise, the revised boards
+pay more attention to signal routing adjacent to noise-sensitive
+circuitry.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">Yes, it’s FT8
+only; CW and SSB modes appear infeasible with this receiver.  The
+SI4735's PLL limits the receiver's tuning to 1 kHz steps which is
+incompatible with amateur CW and SSB operation.  If you need these
+modes in a kit, check-out the <a href="https://qrp-labs.com/">QRP
+Labs</a> transceivers; Hans does an awesome job.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The V1.10
+transmitter PA employed a MMIC a la Charles Hill's original design. 
+The V2.00 boards replaced the MMIC with Barb’s idea to use the
+readily available SN74ACT244 line driver which also delivers a bit
+more power (an idea borrowed from the DX FT8).</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">Many clock designs
+use a TCXO driving one of the SI5351's crystal pins and these designs
+are often in conflict with the SI5351 application notes
+recommendations.  Following up on a tip re. phase noise with that
+approach, this design employs a low jitter TCXO driving the SI5351's
+CLKIN pin.  Following up on yet another tip regarding the SI5351's
+phase noise when driving heavy loads, the V2.00 boards buffer the
+XCLK signal from the SI5351.  All this may be overkill but it was
+easy to implement.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The V2.00 boards and
+the original Pocket FT8 project use an external MCP342x ADC to poll
+the touchscreen.  With a non-blocking ADC library, the Teensy 4.1
+could likely use its second internal ADC but this idea has not yet
+been tested (it can be achieved using a patch to the V2.00 boards). 
+Alternative approaches include using a touchscreen controller.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">Both the V1.10 and
+V2.00 boards display occasional erratic touchscreen behavior.  The
+V2.00 bench testing process is currently (Dec 4, 2024) investigating
+the root cause(s) of this issue.  One finding is substantial impulse
+noise on the X- and Y+ high impedance signals to the ADC.  Potential
+solutions include lowering the impedance to the ADC and/or low-pass
+filtering of the high frequency noise.  Issue #27 tracks the on-going
+investigation.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The V1.10 boards
+employed a 5-pole Chebyshev LP filter providing a measured 40dB of
+2nd harmonic rejection and excellent 3rd harmonic rejection of a
+steady state (Tune) carrier.  However, FT8 transmit/receive switching
+produced a very brief but concerning 2nd harmonic burst.  The root
+cause has not yet been investigated, but the V2.00 boards are
+designed to accept filter plugins allowing experimentation with
+alternative filters (e.g. a harmonic trap) if the problem persists. 
+Issue #26 tracks this investigation.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The V1.10 LP filter
+lacked rejection of received signals below the operating frequency. 
+Investigations into the SI4735 performance found surprisingly strong
+signals in the 540..7000 kHz range having the potential to limit the
+receiver's performance.  The V2.00 board filter plugins offer a
+chance to explore a bandpass design to protect the receiver's front
+end.  
+</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The long-term goal
+is to use a GPS to identify the operator's grid square and sync the
+clock to UTC.  The V2.00 boards support a GPS connection but no
+firmware has been completed as yet.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The touchscreen
+circuitry is proving troublesome.  While it walmost always works, its
+occasional erratic performance is annoying.  One of the project's
+long-term goals is to better understand and resolve the issue with
+hardware, firmware or both.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">Logging was
+originally done to an SD text file, but needs to migrate to an ADIF
+file after the V2.00 hardware is up-and-running.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">Use of a GPS to
+acquire UTC time and grid square for logging is also envisioned after
+the V2.00 boards (which include support for GPS) are up-and-running.</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in">The transceiver is
+configured for your station using a config.json file on an SD card.</p>
+<h2 class="western">Boards and Parts Availability</h2>
+<p style="line-height: 100%; margin-bottom: 0in">Pocket FT8 Revisited
+is not a kit.  If you seek a kit-like experience, check-out <a href="https://qrp-labs.com/">QRP
+Labs</a>, the <a href="https://dl2man.de/">uSDX</a> follow-ons, or
+the <a href="https://github.com/WB2CBA/DX-FT8-FT8-MULTIBAND-TABLET-TRANSCEIVER/blob/main/DX%20FT8%20KIT%20ORDERING%20INFORMATION.pdf">DX
+FT8</a> kit as Pocket FT8 construction demands some engineering
+skills and lab equipment.  That said, I sometimes have a *very*
+limited quantity of excess boards with most SMD components in-place
+if you like to experiment.  Alternatively, the KiCad files are
+available as a starting point for your innovations.</p>
+<h2 class="western">Refactoring</h2>
+<p style="line-height: 100%; margin-bottom: 0in">When the issues list
+shrinks a bit, I’ll likely migrate the firmware from the Arduino
+IDE to PlatformIO to better support testing and isolating the project
+code from the various libraries with their bug fixes and
+enhancements.</p>
+<h2 class="western">Motivation</h2>
+<p style="line-height: 100%; margin-bottom: 0in">The 1966 edition of
+the ARRL Handbook published a wonderful receiver known as the Junior
+Miser’s Dream.  Its elegant, no-frills, do-what-needs-to-be-done,
+clean design (that could be constructed even by a junior high school
+student) influenced my approach to radio design as well as computer
+software.  In the years since, amateur radio equipment has grown in
+features and complexity as well as performance.  Sure, I love my
+Elecraft K3S; it does everything.  But Charley’s Pocket FT8 is a
+step back from all that, a step challenging us to achieve so-much
+with so-little, a step questioning the essence of what do we really
+need.  In a POTA/SOTA rig, perhaps what we most need is, “it just
+works.” -- KQ7B</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+<p style="line-height: 100%; margin-bottom: 0in"><br/>
+
+</p>
+</body>
+</html>
